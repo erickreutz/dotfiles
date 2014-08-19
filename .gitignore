@@ -1,0 +1,11 @@
+.DS_Store
+secrets
+
+atom/*
+
+!atom/styles.less
+!atom/snippets.cson
+!atom/keymap.cson
+!atom/init.coffee
+!atom/config.cson
+!atom/packages
