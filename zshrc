@@ -4,11 +4,12 @@ DISABLE_AUTO_UPDATE="true"
 
 plugins=(git git-remote-branch brew gem osx erickreutz)
 
-[ -f /opt/boxen/env.sh ] && . /opt/boxen/env.sh
-
-[ -f `brew --prefix`/etc/autojump.zsh ] && . `brew --prefix`/etc/autojump.zsh
+[[ -s $(brew --prefix)/etc/profile.d/autojump.sh ]] && . $(brew --prefix)/etc/profile.d/autojump.sh
 
 [[ -f ~/.localrc ]] && . ~/.localrc
 
 export EDITOR='nano'
+export DOCKER_HOST=tcp://192.168.59.103:2376
+export DOCKER_CERT_PATH=/Users/eric/.boot2docker/certs/boot2docker-vm
+export DOCKER_TLS_VERIFY=1
 source $ZSH/oh-my-zsh.sh

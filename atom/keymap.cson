@@ -16,3 +16,10 @@
 #   'ctrl-P': 'core:move-up'
 #   'ctrl-p': 'core:move-down'
 #
+
+# Overide Emmet
+'atom-text-editor:not([mini])':
+  'ctrl-e': 'editor:move-to-end-of-line'
+
+'.atom-pane .atom-text-editor:not(.mini)':
+  'tab': 'snippets:expand'

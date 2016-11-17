@@ -9,10 +9,10 @@ alias ..3='cd ../../..'
 alias ..4='cd ../../../..'
 
 # ls
-alias ls="gls -F --color"
-alias l="gls -lAh --color"
-alias ll="gls -l --color"
-alias la='gls -A --color'
+# alias ls="gls -F --color"
+# alias l="gls -lAh --color"
+# alias ll="gls -l --color"
+# alias la='gls -A --color'
 
 # git
 alias ga='git add'

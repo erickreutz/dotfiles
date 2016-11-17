@@ -22,3 +22,5 @@ unsetopt correct
 . $(dirname $0)/aliases
 
 export PATH="$(dirname $0)/bin:$PATH"
+
+if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi

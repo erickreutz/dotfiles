@@ -1,19 +1,20 @@
 _ = require 'underscore-plus'
-{$, $$, Range, SelectListView}  = require 'atom'
+{Range, CompositeDisposable}  = require 'atom'
+{$, $$, SelectListView}  = require 'atom-space-pen-views'
 
 module.exports =
 class AutocompleteView extends SelectListView
   currentBuffer: null
+  checkpoint: null
   wordList: null
   wordRegex: /\w+/g
-  originalSelectionBufferRange: null
+  originalSelectionBufferRanges: null
   originalCursorPosition: null
   aboveCursor: false
 
-  initialize: (@editorView) ->
+  initialize: (@editor) ->
     super
     @addClass('autocomplete popover-list')
-    {@editor} = @editorView
     @handleEvents()
     @setCurrentBuffer(@editor.getBuffer())
 
@@ -28,21 +29,16 @@ class AutocompleteView extends SelectListView
   handleEvents: ->
     @list.on 'mousewheel', (event) -> event.stopPropagation()
 
-    @editorView.on 'editor:path-changed', => @setCurrentBuffer(@editor.getBuffer())
-    @editorView.command 'autocomplete:toggle', =>
-      if @hasParent()
-        @cancel()
-      else
-        @attach()
-    @editorView.command 'autocomplete:next', => @selectNextItemView()
-    @editorView.command 'autocomplete:previous', => @selectPreviousItemView()
+    @editor.onDidChangePath => @setCurrentBuffer(@editor.getBuffer())
 
-    @filterEditorView.preempt 'textInput', ({originalEvent}) =>
-      text = originalEvent.data
+    @subscriptions = new CompositeDisposable
+    @subscriptions.add @editor.onDidDestroy => @subscriptions.dispose()
+
+    @filterEditorView.getModel().onWillInsertText ({cancel, text}) =>
       unless text.match(@wordRegex)
         @confirmSelection()
         @editor.insertText(text)
-        false
+        cancel()
 
   setCurrentBuffer: (@currentBuffer) ->
 
@@ -60,10 +56,9 @@ class AutocompleteView extends SelectListView
     false
 
   getCompletionsForCursorScope: ->
-    cursorScope = @editor.scopesForBufferPosition(@editor.getCursorBufferPosition())
-    completions = atom.syntax.propertiesForScope(cursorScope, 'editor.completions')
-    completions = completions.map (properties) -> _.valueForKeyPath(properties, 'editor.completions')
-    _.uniq(_.flatten(completions))
+    scope = @editor.scopeDescriptorForBufferPosition(@editor.getCursorBufferPosition())
+    completions = atom.config.getAll('editor.completions', {scope})
+    _.uniq(_.flatten(_.pluck(completions, 'value')))
 
   buildWordList: ->
     wordHash = {}
@@ -73,33 +68,39 @@ class AutocompleteView extends SelectListView
       buffers = [@currentBuffer]
     matches = []
     matches.push(buffer.getText().match(@wordRegex)) for buffer in buffers
-    wordHash[word] ?= true for word in _.flatten(matches)
-    wordHash[word] ?= true for word in @getCompletionsForCursorScope()
+    wordHash[word] ?= true for word in _.flatten(matches) when word
+    wordHash[word] ?= true for word in @getCompletionsForCursorScope() when word
 
     @wordList = Object.keys(wordHash).sort (word1, word2) ->
       word1.toLowerCase().localeCompare(word2.toLowerCase())
 
   confirmed: (match) ->
-    @editor.getSelection().clear()
+    @editor.getSelections().forEach (selection) -> selection.clear()
     @cancel()
     return unless match
-    @replaceSelectedTextWithMatch match
-    position = @editor.getCursorBufferPosition()
-    @editor.setCursorBufferPosition([position.row, position.column + match.suffix.length])
+    @replaceSelectedTextWithMatch(match)
+    @editor.getCursors().forEach (cursor) ->
+      position = cursor.getBufferPosition()
+      cursor.setBufferPosition([position.row, position.column + match.suffix.length])
 
   cancelled: ->
-    super
+    @overlayDecoration?.destroy()
 
-    @editor.abortTransaction()
-    @editor.setSelectedBufferRange(@originalSelectionBufferRange)
-    @editorView.focus()
+    unless @editor.isDestroyed()
+      @editor.revertToCheckpoint(@checkpoint)
+
+      @editor.setSelectedBufferRanges(@originalSelectionBufferRanges)
+
+      atom.workspace.getActivePane().activate()
 
   attach: ->
-    @editor.beginTransaction()
+    @checkpoint = @editor.createCheckpoint()
 
     @aboveCursor = false
-    @originalSelectionBufferRange = @editor.getSelection().getBufferRange()
+    @originalSelectionBufferRanges = @editor.getSelections().map (selection) -> selection.getBufferRange()
     @originalCursorPosition = @editor.getCursorScreenPosition()
+
+    return @cancel() unless @allPrefixAndSuffixOfSelectionsMatch()
 
     @buildWordList()
     matches = @findMatchesForCurrentSelection()
@@ -108,24 +109,20 @@ class AutocompleteView extends SelectListView
     if matches.length is 1
       @confirmSelection()
     else
-      @editorView.appendToLinesView(this)
-      @setPosition()
-      @focusFilterEditor()
+      cursorMarker = @editor.getLastCursor().getMarker()
+      @overlayDecoration = @editor.decorateMarker(cursorMarker, type: 'overlay', position: 'tail', item: this)
 
-  setPosition: ->
-    { left, top } = @editorView.pixelPositionForScreenPosition(@originalCursorPosition)
-    height = @outerHeight()
-    potentialTop = top + @editorView.lineHeight
-    potentialBottom = potentialTop - @editorView.scrollTop() + height
+  destroy: ->
+    @overlayDecoration?.destroy()
 
-    if @aboveCursor or potentialBottom > @editorView.outerHeight()
-      @aboveCursor = true
-      @css(left: left, top: top - height, bottom: 'inherit')
+  toggle: ->
+    if @isVisible()
+      @cancel()
     else
-      @css(left: left, top: potentialTop, bottom: 'inherit')
+      @attach()
 
   findMatchesForCurrentSelection: ->
-    selection = @editor.getSelection()
+    selection = @editor.getLastSelection()
     {prefix, suffix} = @prefixAndSuffixOfSelection(selection)
 
     if (prefix.length + suffix.length) > 0
@@ -137,22 +134,28 @@ class AutocompleteView extends SelectListView
       {word, prefix, suffix} for word in @wordList
 
   replaceSelectedTextWithMatch: (match) ->
-    selection = @editor.getSelection()
-    startPosition = selection.getBufferRange().start
-    buffer = @editor.getBuffer()
+    newSelectedBufferRanges = []
+    @editor.transact =>
+      selections = @editor.getSelections()
+      selections.forEach (selection, i) =>
+        startPosition = selection.getBufferRange().start
+        buffer = @editor.getBuffer()
 
-    selection.deleteSelectedText()
-    cursorPosition = @editor.getCursorBufferPosition()
-    buffer.delete(Range.fromPointWithDelta(cursorPosition, 0, match.suffix.length))
-    buffer.delete(Range.fromPointWithDelta(cursorPosition, 0, -match.prefix.length))
-    @editor.insertText(match.word)
+        selection.deleteSelectedText()
+        cursorPosition = @editor.getCursors()[i].getBufferPosition()
+        buffer.delete(Range.fromPointWithDelta(cursorPosition, 0, match.suffix.length))
+        buffer.delete(Range.fromPointWithDelta(cursorPosition, 0, -match.prefix.length))
 
-    infixLength = match.word.length - match.prefix.length - match.suffix.length
-    @editor.setSelectedBufferRange([startPosition, [startPosition.row, startPosition.column + infixLength]])
+        infixLength = match.word.length - match.prefix.length - match.suffix.length
+
+        newSelectedBufferRanges.push([startPosition, [startPosition.row, startPosition.column + infixLength]])
+
+      @editor.insertText(match.word)
+      @editor.setSelectedBufferRanges(newSelectedBufferRanges)
 
   prefixAndSuffixOfSelection: (selection) ->
     selectionRange = selection.getBufferRange()
-    lineRange = [[selectionRange.start.row, 0], [selectionRange.end.row, @editor.lineLengthForBufferRow(selectionRange.end.row)]]
+    lineRange = [[selectionRange.start.row, 0], [selectionRange.end.row, @editor.lineTextForBufferRow(selectionRange.end.row).length]]
     [prefix, suffix] = ["", ""]
 
     @currentBuffer.scanInRange @wordRegex, lineRange, ({match, range, stop}) ->
@@ -167,15 +170,27 @@ class AutocompleteView extends SelectListView
 
     {prefix, suffix}
 
-  afterAttach: (onDom) ->
-    if onDom
-      widestCompletion = parseInt(@css('min-width')) or 0
-      @list.find('span').each ->
-        widestCompletion = Math.max(widestCompletion, $(this).outerWidth())
-      @list.width(widestCompletion)
-      @width(@list.outerWidth())
+  allPrefixAndSuffixOfSelectionsMatch: ->
+    {prefix, suffix} = {}
+
+    @editor.getSelections().every (selection) =>
+      [previousPrefix, previousSuffix] = [prefix, suffix]
+
+      {prefix, suffix} = @prefixAndSuffixOfSelection(selection)
+
+      return true unless previousPrefix? and previousSuffix?
+      prefix is previousPrefix and suffix is previousSuffix
+
+  attached: ->
+    @focusFilterEditor()
+
+    widestCompletion = parseInt(@css('min-width')) or 0
+    @list.find('span').each ->
+      widestCompletion = Math.max(widestCompletion, $(this).outerWidth())
+    @list.width(widestCompletion)
+    @width(@list.outerWidth())
+
+  detached: ->
 
   populateList: ->
     super
-
-    @setPosition()

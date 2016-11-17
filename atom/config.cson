@@ -1,32 +1,54 @@
-'exception-reporting':
-  'userId': '631e0421-328a-2610-a2c9-21a6d9c74c57'
-'release-notes':
-  'viewedVersion': '0.95.0'
-'welcome':
-  'showOnStartup': false
-'metrics':
-  'userId': '847e50f75b58ed4bbf5619b9df876ec5f83be285'
-'editor':
-  'showIndentGuide': true
-  'showInvisibles': true
-  'fontSize': 12
-  'preferredLineLength': 120
-  'softWrap': true
-  'softWrapAtPreferredLineLength': true
-  'fontFamily': 'Monaco'
-'core':
-  'themes': [
-    'spacegray-dark-ui'
-    'atom-dark-syntax'
-  ]
-  'ignoredNames': [
-    '.git'
-    '.svn'
-    '.DS_Store'
-    'dump.rdb'
-  ]
-  'projectHome': '/Users/eric/Projects'
-  'excludeVcsIgnoredPaths': false
-'Rdio':
-  'showEqualizer (WindowResizePerformanceIssue )': false
-'tree-view': {}
+"*":
+  Rdio:
+    "showEqualizer (WindowResizePerformanceIssue )": false
+  "atom-lint": {}
+  core:
+    excludeVcsIgnoredPaths: false
+    ignoredNames: [
+      ".git"
+      ".svn"
+      ".DS_Store"
+      "dump.rdb"
+    ]
+    projectHome: "/Users/eric/Projects"
+    telemetryConsent: "no"
+    themes: [
+      "spacegray-dark-ui"
+      "hunch-dark-dimmed"
+    ],
+    customFileTypes:
+      'text.html.erb': [
+        'inky'
+      ]
+  editor:
+    fontFamily: "Monaco"
+    fontSize: 12
+    invisibles: {}
+    preferredLineLength: 160
+    showIndentGuide: true
+    showInvisibles: true
+    softWrap: true
+    useShadowDOM: true
+  emmet: {}
+  "exception-reporting":
+    userId: "631e0421-328a-2610-a2c9-21a6d9c74c57"
+  "file-watcher":
+    promptWhenFileHasChangedOnDisk: false
+  linter:
+    statusBar: "Show all errors"
+    subtleLinterErrors: [
+      "rubocop"
+    ]
+  "linter-rubocop":
+    rubocopExecutablePath: "`rbenv which rubocop`"
+  metrics:
+    userId: "847e50f75b58ed4bbf5619b9df876ec5f83be285"
+  nuclide:
+    remoteProjectsConfig: []
+  "one-dark-ui": {}
+  "release-notes":
+    viewedVersion: "0.95.0"
+  "tree-view":
+    hideVcsIgnoredFiles: true
+  welcome:
+    showOnStartup: false

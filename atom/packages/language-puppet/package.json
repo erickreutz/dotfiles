@@ -1,25 +1,61 @@
 {
-  "name": "language-puppet",
-  "version": "0.10.0",
+  "_args": [
+    [
+      {
+        "raw": "/private/var/folders/zy/jpxkgc7s17j86s98xgxwtqyh0000gn/T/d-116913-74894-lv948g/package.tgz",
+        "scope": null,
+        "escapedName": null,
+        "name": null,
+        "rawSpec": "/private/var/folders/zy/jpxkgc7s17j86s98xgxwtqyh0000gn/T/d-116913-74894-lv948g/package.tgz",
+        "spec": "/private/var/folders/zy/jpxkgc7s17j86s98xgxwtqyh0000gn/T/d-116913-74894-lv948g/package.tgz",
+        "type": "local"
+      },
+      "/private/var/folders/zy/jpxkgc7s17j86s98xgxwtqyh0000gn/T/apm-install-dir-116913-74894-1vppgqd"
+    ]
+  ],
+  "_from": "../d-116913-74894-lv948g/package.tgz",
+  "_id": "language-puppet@0.21.0",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/language-puppet",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "/private/var/folders/zy/jpxkgc7s17j86s98xgxwtqyh0000gn/T/d-116913-74894-lv948g/package.tgz",
+    "scope": null,
+    "escapedName": null,
+    "name": null,
+    "rawSpec": "/private/var/folders/zy/jpxkgc7s17j86s98xgxwtqyh0000gn/T/d-116913-74894-lv948g/package.tgz",
+    "spec": "/private/var/folders/zy/jpxkgc7s17j86s98xgxwtqyh0000gn/T/d-116913-74894-lv948g/package.tgz",
+    "type": "local"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "file:../d-116913-74894-lv948g/package.tgz",
+  "_shasum": "2705f28832fc619ac27a1f3f5bd62303507d32f6",
+  "_shrinkwrap": null,
+  "_spec": "/private/var/folders/zy/jpxkgc7s17j86s98xgxwtqyh0000gn/T/d-116913-74894-lv948g/package.tgz",
+  "_where": "/private/var/folders/zy/jpxkgc7s17j86s98xgxwtqyh0000gn/T/apm-install-dir-116913-74894-1vppgqd",
+  "bugs": {
+    "url": "https://github.com/atom/language-puppet/issues"
+  },
+  "dependencies": {},
+  "description": "Puppet language support in Atom",
+  "devDependencies": {
+    "coffeelint": "^1.10.1"
+  },
   "engines": {
     "atom": "*",
     "node": "*"
   },
-  "description": "Puppet language support in Atom",
   "homepage": "http://atom.github.io/language-puppet",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/atom/language-puppet.git"
-  },
-  "bugs": {
-    "url": "https://github.com/atom/language-puppet/issues"
-  },
+  "name": "language-puppet",
+  "optionalDependencies": {},
   "readme": "# Puppet language support in Atom\n\nAdd syntax highlighting and snippets to Puppet files in Atom.\n\nOriginally [converted](http://atom.io/docs/latest/converting-a-text-mate-bundle)\nfrom the [Puppet TextMate bundle](https://github.com/cburyta/puppet-textmate.tmbundle).\n\nContributions are greatly appreciated. Please fork this repository and open a\npull request to add snippets, make grammar tweaks, etc.\n",
   "readmeFilename": "README.md",
-  "_id": "language-puppet@0.10.0",
-  "dist": {
-    "shasum": "c1359b10343a833776a4893955cfbd8cd008ad67"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atom/language-puppet.git"
   },
-  "_resolved": "/var/folders/2p/kvj0pktj7tv9ppxmjl7803_w0000gn/T/d-11454-7657-19dxihm/package.tgz",
-  "_from": "/var/folders/2p/kvj0pktj7tv9ppxmjl7803_w0000gn/T/d-11454-7657-19dxihm/package.tgz"
+  "version": "0.21.0"
 }
